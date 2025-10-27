@@ -82,3 +82,70 @@ npm start
 - To add deployment instructions or Docker support, create a follow-up ticket or ask me to add them.
 
 Enjoy!
+
+7) Testing & example environment variables (recommended for team)
+
+Below are concrete example `.env` values your teammates can copy for local testing. These examples are safe placeholders — replace the values with real credentials for your environment.
+
+Backend example (create `backend/.env` from `backend/.env.example`):
+
+```bash
+# Use a local MongoDB for quick local testing
+MONGODB_URI=mongodb://localhost:27017/expense-tracker-test
+
+# Server port
+PORT=5000
+
+# For email notifications during local testing you can use a testing SMTP provider like Mailtrap
+# or use Sendinblue relay placeholder values below.
+SMTP_HOST=smtp-relay.sendinblue.com
+SMTP_PORT=587
+SMTP_USER=test_smtp_user
+SMTP_PASS=test_smtp_pass
+
+EMAIL_FROM=dev@example.com
+EMAIL_TO=dev-recipient@example.com
+```
+
+Notes:
+- If you don't want to send real emails during development, set `EMAIL_TO` to your own test inbox or
+  configure a local SMTP capture tool like MailHog or Mailtrap.
+- For CI or shared team environments, use environment variables in the CI service rather than committing `.env`.
+
+Frontend example (create `frontend/.env` or set locally):
+
+```bash
+# Point the frontend at the locally running backend
+REACT_APP_API_URL=http://localhost:5000/api
+```
+
+How teammates should get started (quick checklist):
+
+1. Clone the repo:
+
+```bash
+git clone https://github.com/L4er70/expense-tracker.git
+cd expense-tracker
+```
+
+2. Backend:
+
+```bash
+cd backend
+cp .env.example .env   # edit values (MONGODB_URI, SMTP_*)
+npm install
+npm start
+```
+
+3. Frontend (in a new terminal):
+
+```bash
+cd frontend
+cp .env.example .env || printf "REACT_APP_API_URL=http://localhost:5000/api" > .env
+npm install
+npm start
+```
+
+4. Verify backend health endpoint: GET http://localhost:5000/api/health
+
+If your team wants, I can also add a Docker Compose file that brings up MongoDB, backend, and a dev SMTP service (MailHog) for one-command local testing — say the word and I'll add it.
