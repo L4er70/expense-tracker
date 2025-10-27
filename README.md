@@ -229,12 +229,7 @@ docker run -p 8025:8025 -p 1025:1025 mailhog/mailhog
 
 10) Time spent (work summary)
 
-- Total hands-on work in this session: approximately 3 hours. Tasks completed included:
-  - Fixing git tracking issues (nested `.git` in `frontend/`, removing `node_modules` from tracking)
-  - Removing sensitive `.env` from history and re-committing a clean history
-  - Restoring backend files accidentally removed by a history reset
-  - Fixing a route path bug (`expenses` vs `expense`) that prevented the backend from starting
-  - Creating/updating `README.md` and `backend`/`frontend` `.env.example` files and pushing all changes
+- Total hands-on work in this session: approximately 3 hours .
 
 
 11) What I found challenging
