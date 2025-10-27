@@ -4,30 +4,18 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-});
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB error:', err));
 
-const db = mongoose.connection;
-db.on('error', (error) => console.error(error));
-db.once('open', () => console.log('Connected to Database'));
+app.use('/api/categories', require('./routes/categories'));
+app.use('/api/expenses', require('./routes/expense'));
 
-// Routes
-const categoriesRouter = require('./routes/categories');
-const expenseRouter = require('./routes/expense');
+app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 
-app.use('/api/categories', categoriesRouter);
-app.use('/api/expenses', expenseRouter);
-
-// Start server
-const port = process.env.PORT || 5000;
-app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));

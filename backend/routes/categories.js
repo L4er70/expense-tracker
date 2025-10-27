@@ -2,64 +2,32 @@ const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
 
-// Get all categories
 router.get('/', async (req, res) => {
-    try {
-        const categories = await Category.find();
-        res.json(categories);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+  try {
+    const categories = await Category.find().sort({ name: 1 });
+    res.json(categories);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// Create a new category
 router.post('/', async (req, res) => {
-    const category = new Category({
-        name: req.body.name,
-        budget: req.body.budget,
-        color: req.body.color
-    });
-
-    try {
-        const newCategory = await category.save();
-        res.status(201).json(newCategory);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
+  try {
+    const category = new Category(req.body);
+    const newCategory = await category.save();
+    res.status(201).json(newCategory);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 });
 
-// Update a category
-router.patch('/:id', async (req, res) => {
-    try {
-        const category = await Category.findById(req.params.id);
-        if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
-
-        if (req.body.name) category.name = req.body.name;
-        if (req.body.budget) category.budget = req.body.budget;
-        if (req.body.color) category.color = req.body.color;
-
-        const updatedCategory = await category.save();
-        res.json(updatedCategory);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-});
-
-// Delete a category
 router.delete('/:id', async (req, res) => {
-    try {
-        const category = await Category.findById(req.params.id);
-        if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
-
-        await category.remove();
-        res.json({ message: 'Category deleted' });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+  try {
+    await Category.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;

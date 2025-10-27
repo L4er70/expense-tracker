@@ -1,82 +1,73 @@
 const express = require('express');
 const router = express.Router();
 const Expense = require('../models/Expense');
-const emailService = require('../services/emailService');
+const { sendBudgetAlert } = require('../services/emailService');
 
-// Get all expenses
 router.get('/', async (req, res) => {
-    try {
-        const expenses = await Expense.find().populate('category');
-        res.json(expenses);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+  try {
+    const expenses = await Expense.find().populate('category').sort({ date: -1 });
+    res.json(expenses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
-// Create a new expense
+router.get('/total', async (req, res) => {
+  try {
+    const result = await Expense.aggregate([
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const total = result.length > 0 ? result[0].total : 0;
+    res.json({ total });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+router.get('/by-category', async (req, res) => {
+  try {
+    const result = await Expense.aggregate([
+      { $group: { _id: '$category', total: { $sum: '$amount' }, count: { $sum: 1 } } },
+      { $lookup: { from: 'categories', localField: '_id', foreignField: '_id', as: 'categoryInfo' } },
+      { $unwind: '$categoryInfo' },
+      { $project: { category: '$categoryInfo.name', total: 1, count: 1 } },
+      { $sort: { total: -1 } }
+    ]);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 router.post('/', async (req, res) => {
-    const expense = new Expense({
-        description: req.body.description,
-        amount: req.body.amount,
-        date: req.body.date,
-        category: req.body.categoryId
-    });
+  try {
+    const expense = new Expense(req.body);
+    const newExpense = await expense.save();
+    
+    const result = await Expense.aggregate([
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalExpenses = result.length > 0 ? result[0].total : 0;
+    const budgetLimit = parseFloat(process.env.BUDGET_LIMIT) || 1000;
 
-    try {
-        const newExpense = await expense.save();
-        
-        // Send email notification
-        await emailService.sendExpenseNotification(newExpense);
-        
-        res.status(201).json(newExpense);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
+    if (totalExpenses > budgetLimit) {
+      await sendBudgetAlert(totalExpenses, budgetLimit);
     }
+
+    const populated = await Expense.findById(newExpense._id).populate('category');
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 });
 
-// Update an expense
-router.patch('/:id', async (req, res) => {
-    try {
-        const expense = await Expense.findById(req.params.id);
-        if (!expense) {
-            return res.status(404).json({ message: 'Expense not found' });
-        }
-
-        if (req.body.description) expense.description = req.body.description;
-        if (req.body.amount) expense.amount = req.body.amount;
-        if (req.body.date) expense.date = req.body.date;
-        if (req.body.categoryId) expense.category = req.body.categoryId;
-
-        const updatedExpense = await expense.save();
-        res.json(updatedExpense);
-    } catch (err) {
-        res.status(400).json({ message: err.message });
-    }
-});
-
-// Delete an expense
 router.delete('/:id', async (req, res) => {
-    try {
-        const expense = await Expense.findById(req.params.id);
-        if (!expense) {
-            return res.status(404).json({ message: 'Expense not found' });
-        }
-
-        await expense.remove();
-        res.json({ message: 'Expense deleted' });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-
-// Get expenses by category
-router.get('/category/:categoryId', async (req, res) => {
-    try {
-        const expenses = await Expense.find({ category: req.params.categoryId }).populate('category');
-        res.json(expenses);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+  try {
+    await Expense.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 });
 
 module.exports = router;

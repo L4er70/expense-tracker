@@ -1,35 +1,26 @@
 const nodemailer = require('nodemailer');
 
-// Create transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: process.env.SMTP_PORT,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
+  host: process.env.EMAIL_HOST,
+  port: process.env.EMAIL_PORT,
+  secure: false,
+  auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_API_KEY }
 });
 
-// Function to send expense notification
-const sendExpenseNotification = async (expense) => {
-    try {
-        await transporter.sendMail({
-            from: process.env.EMAIL_FROM,
-            to: process.env.EMAIL_TO,
-            subject: 'New Expense Added',
-            html: `
-                <h1>New Expense Details</h1>
-                <p><strong>Description:</strong> ${expense.description}</p>
-                <p><strong>Amount:</strong> $${expense.amount}</p>
-                <p><strong>Date:</strong> ${expense.date}</p>
-            `
-        });
-        console.log('Email notification sent successfully');
-    } catch (error) {
-        console.error('Error sending email:', error);
-    }
+const sendBudgetAlert = async (totalExpenses, budgetLimit) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: process.env.EMAIL_USER,
+      subject: '⚠️ Budget Alert - Limit Exceeded',
+      html: `<h2>Budget Alert</h2><p>Total: $${totalExpenses.toFixed(2)}</p><p>Limit: $${budgetLimit.toFixed(2)}</p><p>Over by: $${(totalExpenses - budgetLimit).toFixed(2)}</p>`
+    });
+    console.log('✅ Email sent');
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Email error:', error.message);
+    return { success: false, error: error.message };
+  }
 };
 
-module.exports = {
-    sendExpenseNotification
-};
+module.exports = { sendBudgetAlert };
