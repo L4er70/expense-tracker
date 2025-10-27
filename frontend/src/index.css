@@ -20,7 +20,7 @@ code {
     monospace;
 }
 
-/* Scrollbar styling */
+
 ::-webkit-scrollbar {
   width: 8px;
 }

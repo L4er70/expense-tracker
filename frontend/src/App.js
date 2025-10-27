@@ -21,7 +21,7 @@ import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
 import CategorySummary from './components/CategorySummary';
 
-const BUDGET_LIMIT = 2000; // Should match backend .env
+const BUDGET_LIMIT = 2000; 
 
 function App() {
   // State for categories
@@ -37,7 +37,7 @@ function App() {
   const [expensesByCategory, setExpensesByCategory] = useState([]);
   const [summaryLoading, setSummaryLoading] = useState(true);
 
-  // ========== FETCH DATA ON COMPONENT MOUNT ==========
+  
   useEffect(() => {
     fetchCategories();
     fetchExpenses();
@@ -45,7 +45,7 @@ function App() {
     fetchExpensesByCategory();
   }, []);
 
-  // ========== CATEGORY FUNCTIONS ==========
+  
   const fetchCategories = async () => {
     try {
       setCategoriesLoading(true);
@@ -86,7 +86,7 @@ function App() {
     }
   };
 
-  // ========== EXPENSE FUNCTIONS ==========
+  
   const fetchExpenses = async () => {
     try {
       setExpensesLoading(true);
@@ -164,7 +164,7 @@ function App() {
     }
   };
 
-  // ========== RENDER ==========
+
   return (
     <div className="app">
       <Toaster position="top-right" />
